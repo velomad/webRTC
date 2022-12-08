@@ -1,34 +1,30 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
+import React, { useEffect, useState } from "react";
+import Chat from "./components/Chat";
+import Meet from "./components/Meet";
+import usePeerConnection from "./hooks/usePeerConnection";
+import { socket } from "./socket";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [socketID, setSocketID] = useState("");
+
+  useEffect(() => {
+    socket.on("connect", () => {
+      setSocketID(socket.id);
+    });
+  }, []);
 
   return (
-    <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <React.Fragment>
+      <div className="grid grid-cols-8 p-4 gap-x-4">
+        <div className="col-span-5">
+          <Meet />
+        </div>
+        <div className="col-span-3">
+          <Chat socketID={socketID} />
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </div>
-  )
+    </React.Fragment>
+  );
 }
 
-export default App
+export default App;
