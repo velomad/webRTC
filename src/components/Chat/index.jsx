@@ -76,12 +76,12 @@ const Chat = ({ socketID, currentMessage }) => {
   };
 
   const handleKeyUp = (e) => {
-    if (e.keyCode === 13) {
+    if (e.keyCode === 13 && !e.shiftKey) {
       handleSendMessage();
     }
   };
   return (
-    <div className="rounded-xl w-full w-full bg-gray-200  ">
+    <div className="rounded-xl bg-gray-200  ">
       <div className="flex flex-col justify-between">
         <div className="p-4 bg-blue-900 m-2 rounded-xl">
           <div className="flex items-center space-x-4">
@@ -106,11 +106,11 @@ const Chat = ({ socketID, currentMessage }) => {
             return !self ? (
               <div ref={messagesEndRef} key={idx} className="flex ">
                 <div className="flex items-center space-x-2 rounded-xl bg-gray-300 p-4">
-                  <div className="bg-red-600 text-white text-lg rounded-full h-8 w-8 flex items-center justify-center">
+                  {/* <div className="bg-red-600 text-white text-lg rounded-full h-8 w-8 flex items-center justify-center">
                     S
-                  </div>
+                  </div> */}
                   <div>
-                    <div className="text-lg">{el.message}</div>
+                    <pre>{el.message}</pre>
                     <div className="float-right" style={{ fontSize: "10px" }}>
                       {formatAMPM(new Date(el.timeStamp))}
                     </div>
@@ -121,24 +121,25 @@ const Chat = ({ socketID, currentMessage }) => {
               <div key={idx} className="flex justify-end">
                 <div className="flex items-center space-x-2 rounded-xl bg-gray-300 p-4">
                   <div>
-                    <div className="text-lg">{el.message}</div>
+                    <pre className="block leading-2">{el.message}</pre>
                     <div className="float-right" style={{ fontSize: "10px" }}>
                       {formatAMPM(new Date(el.timeStamp))}
                     </div>
                   </div>
-                  <div className="bg-blue-600 text-white text-lg rounded-full h-8 w-8 flex items-center justify-center">
+                  {/* <div className="bg-blue-600 text-white text-lg rounded-full h-8 w-8 flex items-center justify-center">
                     M
-                  </div>
+                  </div> */}
                 </div>
               </div>
             );
           })}
         </div>
-        <div className="flex p-2 space-x-2 jutify-between">
+        <div className="flex p-2 jutify-between">
           <div className="relative w-full">
             <textarea
               placeholder="Type your message here..."
-              className="  bg-white rounded-xl p-4 w-full focus:outline-none"
+              className="bg-white rounded-xl p-4 w-full focus:outline-none"
+              style={{ maxWidth: "90%" }}
               id="messageArea"
               onChange={(e) => handleTyping(e)}
               value={message}
@@ -148,7 +149,7 @@ const Chat = ({ socketID, currentMessage }) => {
               draggable={false}
             />
             <div
-              className="absolute right-3 top-3"
+              className="absolute right-2 top-3"
               onClick={() => setShowEmojiPicker(!showEmojiPicker)}
             >
               <svg
