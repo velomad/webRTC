@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { store } from "./store";
+import { Provider } from "react-redux";
 import Button from "./components/Button";
 import Chat from "./components/Chat";
 import Meet from "./components/Meet";

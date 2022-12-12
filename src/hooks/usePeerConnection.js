@@ -1,9 +1,22 @@
 import React, { useEffect, useRef } from "react";
+import { useSelector, useDispatch } from "react-redux";
+
 import { PEER_CONNECTION_CONFIG } from "../components/Meet/peerConfig";
 import { socket } from "../socket";
+import {
+  setStream,
+  setAudioTrack,
+  setVideoTrack,
+} from "../features/webrtc/streamSlice";
+
 const usePeerConnection = () => {
+  const dispatch = useDispatch();
+  const { isVideo } = useSelector((state) => state.stream);
   const localStream = useRef();
   const remoteStream = useRef();
+  const audioTrack = useRef(null);
+  const videoTrack = useRef(null);
+
   const peerConnection = useRef(new RTCPeerConnection(PEER_CONNECTION_CONFIG));
 
   useEffect(() => {
@@ -46,18 +59,21 @@ const usePeerConnection = () => {
       remoteStream.current.srcObject = e.stream;
     };
 
-    (async function () {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video: true,
-        });
+    navigator.mediaDevices
+      .getUserMedia({
+        audio: true,
+        video: true,
+      })
+      .then((stream) => {
+        // audioTrack.current = stream.getAudioTracks()[0];
+        // videoTrack.current = stream.getVideoTracks()[0];
+        // dispatch(setAudioTrack(audioTrack));
+        // dispatch(setVideoTrack(videoTrack));
+        dispatch(setStream(stream));
         localStream.current.srcObject = stream;
         _pc.addStream(stream);
-      } catch (error) {
-        console.log(error);
-      }
-    })();
+      })
+      .catch((err) => console.log(err));
   }, []);
 
   const createOffer = async (data) => {

@@ -3,5 +3,5 @@
 @tailwind utilities;
 
 .video-control-btn{
-    @apply rounded-full h-12 w-12 flex items-center justify-center backdrop-blur-xl bg-white/20 cursor-pointer hover:bg-white/40
+    @apply rounded-full h-12 w-12 flex items-center justify-center backdrop-blur-xl bg-white/30 cursor-pointer hover:bg-white/40
 }
