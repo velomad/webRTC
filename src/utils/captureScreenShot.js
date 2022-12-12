@@ -1,4 +1,4 @@
-const captureScreenShot = (canvas) => {
+const captureScreenShot = () => {
   var canvas = document.getElementById("mycanvas");
   var video = document.getElementById("myVideo");
 

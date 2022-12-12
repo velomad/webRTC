@@ -1,21 +1,100 @@
 import React, { useRef, useState, useEffect } from "react";
 import { io } from "socket.io-client";
-import usePeerConnection from "../../hooks/usePeerConnection";
 import useTimer from "../../hooks/useTimer";
 import { socket } from "../../socket";
 import Button from "../Button";
 import { PEER_CONNECTION_CONFIG } from "./peerConfig";
 import VideoControls from "./VideoControls";
 import captureScreenShot from "../../utils/captureScreenShot";
-import { useSelector } from "react-redux";
-import { setVideoTrack } from "../../features/webrtc/streamSlice";
+import { useSelector, useDispatch } from "react-redux";
+import { setStream } from "../../features/webrtc/streamSlice";
 
 const Meet = () => {
-  const { createAnswer, createOffer, localStream, remoteStream } =
-    usePeerConnection();
   const { minutes, seconds } = useTimer();
-  const { stream } = useSelector((state) => state.stream);
+
   const [showScreenShot, setShowScreenShot] = useState(false);
+
+  const dispatch = useDispatch();
+  const localStream = useRef();
+  const remoteStream = useRef();
+
+  const peerConnection = useRef(new RTCPeerConnection(PEER_CONNECTION_CONFIG));
+
+  useEffect(() => {
+    const _pc = new RTCPeerConnection(PEER_CONNECTION_CONFIG);
+    peerConnection.current = _pc;
+
+    socket.on("onCall", (data) => {
+      peerConnection.current.setRemoteDescription(
+        new RTCSessionDescription(data.signalData)
+      );
+    });
+    socket.on("callAccepted", (data) => {
+      peerConnection.current.setRemoteDescription(
+        new RTCSessionDescription(data.signalData)
+      );
+    });
+
+    socket.on("candidate", (data) => {
+      peerConnection.current.addIceCandidate(
+        new RTCIceCandidate(data.candidate)
+      );
+    });
+
+    // triggered when a new candidate is returned on call create and answer
+    _pc.onicecandidate = (e) => {
+      if (e.candidate) {
+        const request = {
+          candidate: e.candidate,
+        };
+        socket.emit("candidate", request);
+      }
+    };
+
+    // triggered when there is a change in connection state
+    _pc.oniceconnectionstatechange = (e) => {
+      console.log(e);
+    };
+
+    _pc.onaddstream = (e) => {
+      remoteStream.current.srcObject = e.stream;
+    };
+
+    navigator.mediaDevices
+      .getUserMedia({
+        audio: true,
+        video: true,
+      })
+      .then((stream) => {
+        setStream(stream);
+        dispatch(setStream(stream));
+        localStream.current.srcObject = stream;
+        _pc.addStream(stream);
+      })
+      .catch((err) => console.log(err));
+  }, []);
+
+  const createOffer = async (data) => {
+    const sdp = await peerConnection.current.createOffer({
+      offerToReceiveVideo: 1,
+    });
+    const request = {
+      signalData: sdp,
+    };
+    peerConnection.current.setLocalDescription(sdp);
+    socket.emit("call", request);
+  };
+
+  const createAnswer = async (data) => {
+    const sdp = await peerConnection.current.createAnswer({
+      offerToReceiveVideo: 1,
+    });
+    peerConnection.current.setLocalDescription(sdp);
+    const request = {
+      signalData: sdp,
+    };
+    socket.emit("answer", request);
+  };
 
   const closeDownloadScreenShot = (e) => {
     e.preventDefault();
@@ -40,18 +119,14 @@ const Meet = () => {
 
         <div className="relative" style={{ width: "100%" }}>
           <video
-            className="rounded-xl w-full"
+            className=" rounded-xl w-full bg-black"
             id="myVideo"
             autoPlay
-            muted
             playsInline
-            ref={localStream}
+            ref={remoteStream}
           />
 
-          <div
-            className="flex justify-between items-center absolute top-4 left-4 right-4"
-            // style={{ left: "45%" }}
-          >
+          <div className="flex justify-between items-center absolute top-4 left-4 right-4">
             <div className="flex space-x-2 items-center  py-2 rounded-xl px-8 bg-white/40">
               <div>
                 <svg
@@ -106,7 +181,7 @@ const Meet = () => {
                 <div className="absolute -right-2 top-10">
                   <canvas
                     id="mycanvas"
-                    className={` rounded-xl object-fit ${
+                    className={`z-10 rounded-xl object-fit ${
                       showScreenShot ? " shadow-4xl " : null
                     } `}
                     width={250}
@@ -161,15 +236,17 @@ const Meet = () => {
           <div className="flex justify-center absolute bottom-8 left-4 right-4">
             <VideoControls />
           </div>
-
-          <video
-            id="myVideo"
-            autoPlay
-            playsInline
-            ref={remoteStream}
-            className="rounded-xl absolute bottom-2 right-2"
-            style={{ width: 200, borderRadius: "10%" }}
-          />
+          <div className="relative">
+            <video
+              id="myVideo"
+              autoPlay
+              muted
+              playsInline
+              ref={localStream}
+              className="rounded-xl absolute bottom-2 right-2"
+              style={{ width: 200, borderRadius: "10%" }}
+            />
+          </div>
         </div>
       </div>
     </React.Fragment>
