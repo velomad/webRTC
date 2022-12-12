@@ -11,21 +11,17 @@ const usePeerConnection = () => {
     peerConnection.current = _pc;
 
     socket.on("onCall", (data) => {
-      // setIncommingCall && setIncommingCall(true);
-      console.log("incomingCall event received");
       peerConnection.current.setRemoteDescription(
         new RTCSessionDescription(data.signalData)
       );
     });
     socket.on("callAccepted", (data) => {
-      console.log("call has been answered");
       peerConnection.current.setRemoteDescription(
         new RTCSessionDescription(data.signalData)
       );
     });
 
     socket.on("candidate", (data) => {
-      console.log("-------incomming perr connection---------", data);
       peerConnection.current.addIceCandidate(
         new RTCIceCandidate(data.candidate)
       );
@@ -37,8 +33,6 @@ const usePeerConnection = () => {
         const request = {
           candidate: e.candidate,
         };
-        console.log("run hua pencho pudiya parooo fridayyyyy", request);
-        // set offer sdp as local description
         socket.emit("candidate", request);
       }
     };
@@ -48,9 +42,7 @@ const usePeerConnection = () => {
       console.log(e);
     };
 
-    // triggered when a stream is added to pc, see below - pc.addStream(stream)
     _pc.onaddstream = (e) => {
-      console.log(e);
       remoteStream.current.srcObject = e.stream;
     };
 
@@ -60,8 +52,6 @@ const usePeerConnection = () => {
           audio: true,
           video: true,
         });
-        // setStream(stream);
-        window.localStream = stream;
         localStream.current.srcObject = stream;
         _pc.addStream(stream);
       } catch (error) {
@@ -77,8 +67,6 @@ const usePeerConnection = () => {
     const request = {
       signalData: sdp,
     };
-    console.log(request);
-    // set offer sdp as local description
     peerConnection.current.setLocalDescription(sdp);
     socket.emit("call", request);
   };
@@ -87,7 +75,6 @@ const usePeerConnection = () => {
     const sdp = await peerConnection.current.createAnswer({
       offerToReceiveVideo: 1,
     });
-    // set answer sdp as local description
     peerConnection.current.setLocalDescription(sdp);
     const request = {
       signalData: sdp,
